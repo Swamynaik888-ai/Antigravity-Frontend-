@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebugAI | Smart Code Debugging Assistant</title>
+    <meta name="description" content="AI-powered coding assistant that explains errors in simple English, suggests instant fixes, and helps you learn.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Animated Background Elements -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+
+        <header class="app-header glass-panel">
+            <div class="logo">
+                <i class="fa-solid fa-bug-slash icon-gradient"></i>
+                <h1 class="gradient-text">DebugAI</h1>
+            </div>
+            <nav class="top-nav">
+                <button class="nav-btn active" data-view="workspace"><i class="fa-solid fa-code"></i> Editor</button>
+                <button class="nav-btn" data-view="dashboard"><i class="fa-solid fa-chart-simple"></i> Dashboard</button>
+            </nav>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Student&background=8b5cf6&color=fff" alt="User" class="avatar">
+            </div>
+        </header>
+
+        <main class="workspace" id="workspace-view">
+            <!-- Left Side: Code Input -->
+            <section class="panel input-panel glass-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-code"></i> Workspace</h2>
+                    <div class="language-selector">
+                        <label for="lang-select" class="sr-only">Language:</label>
+                        <select id="lang-select" class="custom-select">
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="c">C / C++</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <div class="mac-buttons">
+                            <span class="mac-btn close"></span>
+                            <span class="mac-btn minimize"></span>
+                            <span class="mac-btn maximize"></span>
+                        </div>
+                        <span class="file-name" id="file-name-display">main.py</span>
+                    </div>
+                    <!-- Using a textarea for prototype, could be Monaco Editor in full app -->
+                    <textarea id="code-editor" class="code-editor" spellcheck="false" placeholder="// Paste your buggy code here...
+def calculate_average(numbers):
+    total = sum(numbers)
+    count = len(numbers)
+    return total / count
+
+print(calculate_average([]))"></textarea>
+                </div>
+
+                <div class="action-bar">
+                    <button id="debug-btn" class="primary-btn glow-effect">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze & Debug
+                    </button>
+                    <button id="clear-btn" class="secondary-btn">
+                        <i class="fa-solid fa-trash-can"></i> Clear
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Side: Assistant Output -->
+            <section class="panel output-panel glass-panel">
+                <div class="panel-header tab-header">
+                    <button class="tab-btn active" data-tab="assistant">
+                        <i class="fa-solid fa-robot"></i> Assistant
+                    </button>
+                    <button class="tab-btn" data-tab="terminal">
+                        <i class="fa-solid fa-terminal"></i> Terminal
+                    </button>
+                </div>
+
+                <div class="output-content" id="output-content">
+                    <!-- Empty State -->
+                    <div class="empty-state" id="empty-state">
+                        <div class="animated-icon">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        </div>
+                        <h3>Ready to squash bugs!</h3>
+                        <p>Paste your error-prone code on the left and click <strong>Analyze & Debug</strong>. I'll explain what went wrong and how to fix it.</p>
+                        
+                        <div class="features-list">
+                            <div class="feature-item">
+                                <i class="fa-solid fa-language text-blue"></i>
+                                <span>Plain English Explanations</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fa-solid fa-wrench text-green"></i>
+                                <span>Actionable Code Fixes</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fa-solid fa-brain text-purple"></i>
+                                <span>Deep Learning Mode</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="loading-state hidden" id="loading-state">
+                        <div class="spinner"></div>
+                        <p class="loading-text">Analyzing logic and traces...</p>
+                    </div>
+
+                    <!-- Results State (Hidden by default, populated by JS) -->
+                    <div class="results-state hidden" id="results-state">
+                        
+                        <!-- Rule Engine Result -->
+                        <div class="engine-section rule-engine" id="rule-engine-section">
+                            <div class="engine-tag"><i class="fa-solid fa-bolt text-warning"></i> <span>Rule Engine Detection (Instant)</span></div>
+                            <div class="error-banner">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                                <div class="error-info">
+                                    <div class="error-header-row">
+                                        <span class="error-type" id="res-error-type">ZeroDivisionError</span>
+                                        <span class="category-badge" id="res-error-category">Runtime Error</span>
+                                    </div>
+                                    <span class="error-msg" id="res-error-msg">division by zero</span>
+                                </div>
+                                <div class="error-line-badge" id="res-error-line">Line 4</div>
+                            </div>
+                        </div>
+
+                        <!-- AI Loading State -->
+                        <div class="ai-loading-state hidden" id="ai-loading-state">
+                            <div class="spinner-small"></div>
+                            <span class="text-secondary">AI Teacher is formulating an explanation...</span>
+                        </div>
+
+                        <!-- AI Engine Results -->
+                        <div class="engine-section ai-engine hidden" id="ai-engine-section">
+                            <div class="engine-tag"><i class="fa-solid fa-brain text-purple"></i> <span>AI Teacher Explanation</span></div>
+                            
+                            <!-- Simple Explanation -->
+                            <div class="result-card explanation-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-regular fa-comment-dots"></i> What happened?</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p id="res-explanation">You are trying to calculate the average of an empty list. Because the list has no items, the <code>count</code> is 0. Math doesn't allow dividing by zero!</p>
+                                </div>
+                            </div>
+
+                            <!-- Suggested Fix -->
+                            <div class="result-card fix-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-code-merge"></i> How to fix it</h3>
+                                    <button class="copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+                                </div>
+                                <div class="card-body">
+                                    <pre><code class="language-python" id="res-fix-code">def calculate_average(numbers):
+    if not numbers:
+        return 0
+    total = sum(numbers)
+    count = len(numbers)
+    return total / count</code></pre>
+                                </div>
+                            </div>
+
+                            <!-- Learning Mode -->
+                            <div class="result-card logic-card glow-border">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-graduation-cap"></i> Learning Mode</h3>
+                                    <span class="badge">Pro Tip</span>
+                                </div>
+                                <div class="card-body" id="res-learning">
+                                    <p><strong>Always check your boundaries!</strong> When writing functions that take collections (like lists or arrays), form a habit of asking: <em>"What happens if this is empty?"</em> This prevents unexpected crashes in production.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Dashboard View -->
+        <main class="dashboard-view hidden" id="dashboard-view">
+            <div class="dashboard-header">
+                <h2>Welcome back, Student! 👋</h2>
+                <p class="text-secondary">Here is a summary of your debugging journey and learning progress.</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon bg-purple"><i class="fa-solid fa-bug-slash"></i></div>
+                    <div class="stat-info">
+                        <h3>Bugs Squashed</h3>
+                        <p class="stat-value">142</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon bg-blue"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="stat-info">
+                        <h3>Time Saved</h3>
+                        <p class="stat-value">6.5 <span class="stat-unit">hrs</span></p>
+                    </div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon bg-green"><i class="fa-solid fa-brain"></i></div>
+                    <div class="stat-info">
+                        <h3>Concepts Learned</h3>
+                        <p class="stat-value">18</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-icon bg-pink"><i class="fa-solid fa-fire"></i></div>
+                    <div class="stat-info">
+                        <h3>Current Streak</h3>
+                        <p class="stat-value">4 <span class="stat-unit">days</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="dashboard-panel glass-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Error Frequencies</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="progress-item">
+                            <div class="progress-labels">
+                                <span>NullPointerException</span>
+                                <span>35%</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar fill-purple" style="width: 35%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-labels">
+                                <span>SyntaxError</span>
+                                <span>25%</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar fill-blue" style="width: 25%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-labels">
+                                <span>IndexOutOfBounds</span>
+                                <span>20%</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar fill-pink" style="width: 20%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-labels">
+                                <span>Type Mismatch</span>
+                                <span>15%</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar fill-green" style="width: 15%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel glass-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-book-open"></i> Recent Learning Insights</h3>
+                    </div>
+                    <div class="panel-body insights-list">
+                        <div class="insight-item">
+                            <div class="insight-icon text-purple"><i class="fa-solid fa-check-circle"></i></div>
+                            <div class="insight-text">
+                                <h4>Boundary Checking</h4>
+                                <p>Mastered checking list lengths before calculating sums or averages.</p>
+                            </div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-icon text-blue"><i class="fa-solid fa-check-circle"></i></div>
+                            <div class="insight-text">
+                                <h4>Null Validation</h4>
+                                <p>Improved handling of uninitialized variables in Java.</p>
+                            </div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-icon text-pink"><i class="fa-solid fa-check-circle"></i></div>
+                            <div class="insight-text">
+                                <h4>Memory Access</h4>
+                                <p>Learned how C arrays map to memory and avoiding segfaults.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
